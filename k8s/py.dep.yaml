@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: py-dep
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: py-dep
+  template:
+    metadata:
+      labels:
+        app: py-dep
+    spec:
+      containers:
+        - name: py-dep
+          image: forzalino/python:dev
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          resources:
+            limits:
+              cpu: 1000m
+              memory: 1024Mi
+            requests:
+              cpu: 100m
+              memory: 256Mi
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8080
+            periodSeconds: 10
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            periodSeconds: 10
+            failureThreshold: 3
+        # Envoy sidecar
+        - name: envoy
+          image: envoyproxy/envoy:v1.11.2
+          ports:
+            - containerPort: 80
+            - containerPort: 443
